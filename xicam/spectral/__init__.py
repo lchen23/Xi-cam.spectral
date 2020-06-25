@@ -1,14 +1,31 @@
+import numpy as np
 from qtpy.QtWidgets import QLabel, QComboBox, QHBoxLayout, QWidget, QSpacerItem, QSizePolicy
 from xicam.core import msg
 from xicam.plugins import GUIPlugin, GUILayout
 from xicam.plugins.guiplugin import PanelState
-from xicam.gui.widgets.imageviewmixins import XArrayView, CatalogView, StreamSelector, FieldSelector
+from xicam.gui.widgets.imageviewmixins import XArrayView, DepthPlot, BetterTicks, BetterLayout, BetterPlots
 import logging
 from xicam.gui.widgets.library import LibraryWidget
-from xicam.core import msg
+from databroker.core import BlueskyRun
+from xarray import DataArray
+
+def project_nxSTXM(run_catalog: BlueskyRun):
+    _, projection = next(filter(lambda projection: projection[0] == 'nxSTXM', run_catalog.metadata['start']['projections']))
+    stream, field = projection['irmap/DATA/data']
+    sample_x = projection['irmap/DATA/sample_x']
+    sample_y = projection['irmap/DATA/sample_y']
+    energy = projection['irmap/DATA/energy']
+
+    xdata = getattr(run_catalog, stream).to_dask()[field]  # type: DataArray
+
+    xdata = np.squeeze(xdata)
+
+    xdata = xdata.assign_coords({xdata.dims[0]: energy, xdata.dims[1]: sample_y, xdata.dims[2]: sample_x})
+
+    return xdata
 
 
-class CatalogViewerBlend(StreamSelector, FieldSelector, XArrayView, CatalogView):
+class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
     def __init__(self, *args, **kwargs):
         # CatalogViewerBlend inherits methods from XArrayView and CatalogView
         # super allows us to access both methods when calling super() from Blend
@@ -24,7 +41,7 @@ class SpectralPlugin(GUIPlugin):
         self.stages = {
             "Acquire": GUILayout(QWidget()),
             "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
-            "Map": GUILayout(QWidget()),
+            "Map": GUILayout(self.catalog_viewer),
             "Decomposition": GUILayout(QWidget()),
             "Clustering": GUILayout(QWidget()),
         }
@@ -36,12 +53,17 @@ class SpectralPlugin(GUIPlugin):
             stream_names = get_all_streams(run_catalog)
 
             msg.showMessage(f"Loading primary image for {run_catalog.name}")
-            # try and startup with primary catalog and whatever fields it has
-            if "primary" in self.stream_fields:
-                default_stream_name = "primary" if "primary" in stream_names else stream_names[0]
-            else:
-                default_stream_name = list(self.stream_fields.keys())[0]
-            self.catalog_viewer.setCatalog(run_catalog, default_stream_name, None)
+            # # try and startup with primary catalog and whatever fields it has
+            # if "primary" in self.stream_fields:
+            #     default_stream_name = "primary" if "primary" in stream_names else stream_names[0]
+            # else:
+            #     default_stream_name = list(self.stream_fields.keys())[0]
+
+            # Apply nxSTXM projection
+            xdata = project_nxSTXM(run_catalog)
+
+            self.catalog_viewer.setImage(xdata)
+
         except Exception as e:
             msg.logError(e)
             msg.showMessage("Unable to display: ", str(e))
