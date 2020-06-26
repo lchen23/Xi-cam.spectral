@@ -3,8 +3,13 @@ from xicam.core import msg
 from xicam.plugins import GUIPlugin, GUILayout
 from xicam.plugins.guiplugin import PanelState
 from xicam.gui.widgets.imageviewmixins import XArrayView, CatalogView, StreamSelector, FieldSelector
+from xicam.gui.widgets.dynimageview import DynImageView
+from xicam.gui.widgets.linearworkfloweditor import WorkflowEditor
+# from xicam.gui.widgets.library import LibraryWidget
+
+from .workflows import StxmWorkflow
 import logging
-from xicam.gui.widgets.library import LibraryWidget
+
 from xicam.core import msg
 
 
@@ -20,11 +25,23 @@ class SpectralPlugin(GUIPlugin):
 
     def __init__(self):
         self.catalog_viewer = CatalogViewerBlend()
-        self.library_viewer = LibraryWidget()
+        self.results_viewer = DynImageView()
+        self.workflow_widget = WorkflowEditor
+        # self.library_viewer = LibraryWidget()
+
+        self._workflow = StxmWorkflow()  # Create a workflow
+        self._workflow_editor = WorkflowEditor(workflow=self._workflow)
+        self._workflow_editor.sigRunWorkflow.connect(self.run_workflow)
+
+        catalog_viewer_layout = GUILayout(self.catalog_viewer,
+                                          right=self._workflow_editor,
+                                          bottom=self.results_viewer)
+
         self.stages = {
             "Acquire": GUILayout(QWidget()),
-            "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
-            "Map": GUILayout(QWidget()),
+            # "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
+            "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.catalog_viewer, right=self.catalog_viewer),
+            "Map": GUILayout(catalog_viewer_layout),
             "Decomposition": GUILayout(QWidget()),
             "Clustering": GUILayout(QWidget()),
         }
@@ -46,6 +63,29 @@ class SpectralPlugin(GUIPlugin):
             msg.logError(e)
             msg.showMessage("Unable to display: ", str(e))
 
+    def run_workflow(self):
+        """Run the internal workflow.
+        In this example, this will be called whenever the "Run Workflow" in the WorkflowEditor is clicked.
+        """
+        if not self.catalog_viewer.catalog:  # Don't run if there is no data loaded in
+            return
+        # Use Workflow's execute method to run the workflow.
+        # our callback_slot will be called when the workflow has executed its operations
+        # image is an additional keyword-argument that is fed into the first operation in the workflow
+        # (the invert operation needs an "image" argument)
+        self._workflow.execute(callback_slot=self.results_ready,
+                               image=self.catalog_viewer.image)
+
+    def results_ready(self, *results):
+        """Update the results view widget with the processed data.
+        This is called when the workflow's execute method has finished running is operations.
+        """
+        # print(results)
+        # results is a tuple that will look like:
+        # ({"output_name": output_value"}, ...)
+        # This will only contain more than one dictionary if using Workflow.execute_all
+        output_image = results[0]["output_image"]  # We want the output_image from the last operation
+        self.results_viewer.setImage(output_image)  # Update the result view widget
 
 ### small helper functions
 def get_stream_data_keys(run_catalog, stream):
@@ -57,7 +97,6 @@ def get_all_streams(run_catalog):
 
 
 def get_all_image_fields(run_catalog):
-    # image_fields = []
     all_streams_image_fields = {}
     for stream in get_all_streams(run_catalog):
         stream_fields = get_stream_data_keys(run_catalog, stream)
@@ -76,6 +115,3 @@ def get_all_image_fields(run_catalog):
             # else:
     return all_streams_image_fields
 
-
-# Problem: primary image field does not show up anymore...
-# Problem: primary image field does not show up anymore...
