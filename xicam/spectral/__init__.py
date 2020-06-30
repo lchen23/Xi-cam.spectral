@@ -7,7 +7,7 @@ from xicam.gui.widgets.dynimageview import DynImageView
 from xicam.gui.widgets.linearworkfloweditor import WorkflowEditor
 # from xicam.gui.widgets.library import LibraryWidget
 
-from .workflows import StxmWorkflow
+from .workflows.workflows import StxmWorkflow
 import logging
 
 from xicam.core import msg
@@ -26,7 +26,7 @@ class SpectralPlugin(GUIPlugin):
     def __init__(self):
         self.catalog_viewer = CatalogViewerBlend()
         self.results_viewer = DynImageView()
-        self.workflow_widget = WorkflowEditor
+        # self.workflow_widget = WorkflowEditor()
         # self.library_viewer = LibraryWidget()
 
         self._workflow = StxmWorkflow()  # Create a workflow
@@ -41,7 +41,7 @@ class SpectralPlugin(GUIPlugin):
             "Acquire": GUILayout(QWidget()),
             # "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
             "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.catalog_viewer, right=self.catalog_viewer),
-            "Map": GUILayout(catalog_viewer_layout),
+            "Map": catalog_viewer_layout,
             "Decomposition": GUILayout(QWidget()),
             "Clustering": GUILayout(QWidget()),
         }
