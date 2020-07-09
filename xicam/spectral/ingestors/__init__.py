@@ -80,10 +80,11 @@ def ingest_cxi(paths):
     sample_y = translation[:,1]
     # sample_z = translation[:,2]
 
-    energy = h5['entry_1']['instrument_1']['source_1']['energy'][()] #energy in J
+    energy = h5['entry_1']['instrument_1']['source_1']['energy'][()] #energy in Joule
     wavelength = speed_of_light*h/energy
     energy_eV = energy/e
 
+    #TODO energy, coords len not matching number of frames
     xarray = DataArray(data, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy_eV, sample_y, sample_x])
     dask_data = da.from_array(xarray)
 
