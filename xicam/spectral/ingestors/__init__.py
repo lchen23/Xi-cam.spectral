@@ -74,6 +74,7 @@ def ingest_cxi(paths):
     h5 = h5py.File(path, 'r')
 
     data = h5['entry_1']['data_1']['data'][()]  # data array
+    results = h5['entry_1']['image_1']['data'][()]  # data array
     translation = h5['entry_1']['data_1']['translation'][()]  # data coords
     sample_x = translation[:,0]
     sample_y = translation[:,1]
@@ -89,10 +90,12 @@ def ingest_cxi(paths):
     projections = [('NXcxi_ptycho',
                         {'entry_1/data_1/data': ('primary', 'raw'),
                          'entry_1/instrument_1/source_1/energy': energy,
+                         #TODO how to define sample coords from cxi
                          'entry_1/data_1/translation': sample_x,
                          'entry_1/data_1/translation': sample_y}
     )]
 
+    #TODO go through the rest
     # Compose run start
     run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle
     start_doc = run_bundle.start_doc
