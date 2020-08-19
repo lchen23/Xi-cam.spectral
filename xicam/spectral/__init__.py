@@ -9,6 +9,7 @@ from xicam.gui.widgets.library import LibraryWidget
 from databroker.core import BlueskyRun
 from xarray import DataArray
 
+
 def project_nxSTXM(run_catalog: BlueskyRun):
     _, projection = next(filter(lambda projection: projection[0] == 'nxSTXM', run_catalog.metadata['start']['projections']))
     stream, field = projection['irmap/DATA/data']
