@@ -38,6 +38,7 @@ setup(
     author_email="ronpandolfi@lbl.gov",
     entry_points={
         "xicam.plugins.GUIPlugin": ["spectral = xicam.spectral:SpectralPlugin"],
+        "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors:ingest_nxSTXM"],
         # "databroker.handlers": [
         #     "JPEG = xicam.catalog_viewer.image_handlers:JPEGHandler",
         #     "TIFF = xicam.catalog_viewer.image_handlers:TIFFHandler",
