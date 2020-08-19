@@ -4,6 +4,7 @@ from xicam.core import msg
 from xicam.plugins import GUIPlugin, GUILayout
 from xicam.plugins.guiplugin import PanelState
 from xicam.gui.widgets.imageviewmixins import XArrayView, DepthPlot, BetterTicks, BetterLayout, BetterPlots
+from xicam.gui.widgets.dynimageview import DynImageView
 import logging
 from xicam.gui.widgets.library import LibraryWidget
 from databroker.core import BlueskyRun
