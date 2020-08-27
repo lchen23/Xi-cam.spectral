@@ -1,7 +1,8 @@
 
-from shop.correction.register import RegisterOperation
-from shop.correction.filter import MedianFilterOperation, WienerFilterOperation, Denoise, Despike
-from shop.correction.opitcal_density import CalcOpticalDensity
+from pystxmtools.corrections.register import RegisterOperation
+from pystxmtools.corrections.filter import MedianFilterOperation, WienerFilterOperation, Denoise, Despike
+from pystxmtools.corrections.optical_density import CalcOpticalDensity
+from pystxmtools.corrections.fitting import LeastSquaresFit
 
 # from ..operations.register import RegisterOperation
 # from shop.correction.filter import median_filter, wiener_filter
@@ -19,13 +20,16 @@ class StxmWorkflow(Workflow):
         median = WienerFilterOperation()
         denoise = Denoise()
         #TODO: how can calcOD receive IO map in workflow editor
-        calcOD = CalcOpticalDensity()
+        calc_OD = CalcOpticalDensity()
+        lstsq_fit = LeastSquaresFit()
+
         # Add operation to the workflow
         self.add_operations(register)
         self.add_operations(wiener)
         self.add_operations(median)
         self.add_operation(denoise)
-        self.add_operation(calcOD)
+        self.add_operation(calc_OD)
+        self.add_operation(lstsq_fit)
         #connect one operation's output with another operation's input
         # self.add_link()
 

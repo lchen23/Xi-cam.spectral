@@ -101,7 +101,7 @@ def ingest_cxi(path):
                          'entry_1/data_1/translation': sample_y}
     )]
 
-    # Compose bluseksy run
+    # Compose bluesky run
     run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle
 
     #Create start document
