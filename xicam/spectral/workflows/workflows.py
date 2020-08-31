@@ -20,7 +20,7 @@ class StxmWorkflow(Workflow):
         median = WienerFilterOperation()
         denoise = Denoise()
         #TODO: how can calcOD receive IO map in workflow editor
-        calc_OD = CalcOpticalDensity()
+        # calc_OD = CalcOpticalDensity()
         lstsq_fit = LeastSquaresFit()
 
         # Add operation to the workflow
@@ -28,8 +28,9 @@ class StxmWorkflow(Workflow):
         self.add_operations(wiener)
         self.add_operations(median)
         self.add_operation(denoise)
-        self.add_operation(calc_OD)
+        # self.add_operation(calc_OD)
         self.add_operation(lstsq_fit)
+        # self.auto_connect_all()
         #connect one operation's output with another operation's input
         # self.add_link()
 

@@ -39,6 +39,17 @@ setup(
     entry_points={
         "xicam.plugins.GUIPlugin": ["spectral = xicam.spectral:SpectralPlugin"],
         "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors:ingest_nxSTXM"],
+        "xicam.plugins.OperationPlugin": ["wiener_filter = pystxmtools.corrections.filter:WienerFilterOperation",
+                                          "median_filter = pystxmtools.corrections.filter:MedianFilterOperation",
+                                          "nl_means_filter = pystxmtools.corrections.filter:nlMeansFilter",
+                                          "despike = pystxmtools.corrections.filter:Despike",
+                                          "denoise = pystxmtools.corrections.filter:Denoise",
+                                          "calc_optical_density = pystxmtools.corrections.optical_density:CalcOpticalDensity",
+                                          "get_I0_mask = pystxmtools.corrections.optical_density:CalcI0Mask",
+                                          "register_stack = pystxmtools.corrections.register:RegisterOperation",
+                                          "lin_fit_spectra = pystxmtools.corrections.fitting:LinFitSpectra",
+                                          "lstsq_fit = pystxmtools.corrections.fitting:LeastSquaresFit",
+                                          "nn_lstsq = pystxmtools.corrections.fitting:NNLeastSquaresFit"]
         # "databroker.handlers": [
         #     "JPEG = xicam.catalog_viewer.image_handlers:JPEGHandler",
         #     "TIFF = xicam.catalog_viewer.image_handlers:TIFFHandler",
