@@ -5,7 +5,8 @@ import h5py
 from dask import array as da
 from pathlib import Path
 from xarray import DataArray
-
+from scipy.constants import h, e, speed_of_light
+import numpy as np
 
 def ingest_cxi(path):
 
@@ -26,34 +27,47 @@ def ingest_cxi(path):
     energy_eV_stack = []
     pixel_x_stack = []
     pixel_y_stack = []
+    coords_x_stack = []
+    coords_y_stack = []
     wavelength_stack = []
+
+    rec_shape = h5['entry_1']['image_1']['data'][()].shape
+    dim_x = rec_shape[0]
+    dim_y = rec_shape[1]
+
 
     for entry in sorted_entry_list:
         # frames_stack.append(h5[entry[0]]['data_1']['data'][()])  # diffraction patterns 3D array (N*X*Y)
-        rec_stack.append(h5[entry[0]]['image_1']['data'][()])  # reconstructed imnage data 2D array (X*Y)
-        pixel_x_stack.append(h5[entry[0]]['instrument_1']['detector_1']['x_pixel_size'][()])
-        pixel_y_stack.append(h5[entry[0]]['instrument_1']['detector_1']['y_pixel_size'][()])
+        rec = h5[entry[0]]['image_1']['data'][()]
+        rec_stack.append(rec)  # reconstructed image data 2D array (X*Y)
+        pixel_x = h5[entry[0]]['instrument_1']['detector_1']['x_pixel_size'][()]
+        pixel_y = h5[entry[0]]['instrument_1']['detector_1']['y_pixel_size'][()]
+        pixel_x_stack.append(pixel_x)
+        pixel_y_stack.append(pixel_y)
+        coords_x = []
+        coords_y = []
+        for i in range(dim_x):
+            coords_x.append(pixel_x*i)
+        for i in range(dim_y):
+            coords_y.append(pixel_y*i)
+        coords_x_stack.append(np.asarray(coords_x))
+        coords_y_stack.append(np.asarray(coords_y))
         energy = h5[entry[0]]['instrument_1']['source_1']['energy'][()]
         energy_stack.append(energy)      # energy in Joule
         energy_eV_stack.append(energy/e)
         wavelength_stack.append(speed_of_light/energy)
         # translation = h5['entry_1']['data_1']['translation'][()]  # positions of diffraction patterns
 
-    recs = np.ndarray(rec_stack)
-    coords_x = []
-    coords_y = []
-    for i in range(recs.shape[1]):
-        coords_x.append(pixel_x_stack[0] * i)
-    for i in range(recs.shape[2]):
-        coords_y.append(pixel_y_stack[0] * i)
+    recs = np.asarray(rec_stack)
+
 
         #/Users/jreinhardt/Data/ALS/NS_200805056_full.cxi"
     ### Create data array
     # #TODO energy, coords len not matching number of frames
-    xarray = DataArray(rec_stack, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy_eV_stack, coords_x, coords_y])
+    #xarray = DataArray(rec_stack, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy_eV_stack, coords_x, coords_y])
     # dask_data = da.from_array(xarray)
 
-    return energy_eV_stack, coords_x, coords_y, rec_stack
+    return energy_eV_stack, recs, coords_x_stack, coords_y_stack, pixel_x_stack
 
     # ### describe projections and create databroker run catalog (=run_bundle)
     # projections = [('NXcxi_ptycho',
