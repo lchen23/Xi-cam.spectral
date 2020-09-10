@@ -38,7 +38,13 @@ setup(
     author_email="ronpandolfi@lbl.gov",
     entry_points={
         "xicam.plugins.GUIPlugin": ["spectral = xicam.spectral:SpectralPlugin"],
-        "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors:ingest_nxSTXM"],
+        "xicam.plugins.OperationPlugin": ['pca = xicam.spectral.operations.decomposition:pca',
+                                          'nmf = xicam.spectral.operations.decomposition:nmf',
+                                          'umap = xicam.spectral.operations.decomposition:umap',
+                                          'standard_scaler = xicam.spectral.operations.normalization:standard_scaler',
+                                          'normalizer = xicam.spectral.operations.normalization:normalizer'],
+        "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors:ingest_nxSTXM",
+                                 'application/x-fits = xicam.spectral.ingestors:ingest_NXarpes'],
         # "databroker.handlers": [
         #     "JPEG = xicam.catalog_viewer.image_handlers:JPEGHandler",
         #     "TIFF = xicam.catalog_viewer.image_handlers:TIFFHandler",
