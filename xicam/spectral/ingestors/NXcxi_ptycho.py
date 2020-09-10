@@ -39,15 +39,21 @@ def ingest_cxi(path):
         wavelength_stack.append(speed_of_light/energy)
         # translation = h5['entry_1']['data_1']['translation'][()]  # positions of diffraction patterns
 
+    recs = np.ndarray(rec_stack)
+    coords_x = []
+    coords_y = []
+    for i in range(recs.shape[1]):
+        coords_x.append(pixel_x_stack[0] * i)
+    for i in range(recs.shape[2]):
+        coords_y.append(pixel_y_stack[0] * i)
 
-
-    #/Users/jreinhardt/Data/ALS/NS_200805056_full.cxi"
+        #/Users/jreinhardt/Data/ALS/NS_200805056_full.cxi"
     ### Create data array
     # #TODO energy, coords len not matching number of frames
-    # xarray = DataArray(rec_stack, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy_eV_stack, pixel_x_stack, pixel_x_stack])
+    xarray = DataArray(rec_stack, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy_eV_stack, coords_x, coords_y])
     # dask_data = da.from_array(xarray)
 
-    return energy_eV_stack, pixel_x_stack, pixel_y_stack, rec_stack
+    return energy_eV_stack, coords_x, coords_y, rec_stack
 
     # ### describe projections and create databroker run catalog (=run_bundle)
     # projections = [('NXcxi_ptycho',
