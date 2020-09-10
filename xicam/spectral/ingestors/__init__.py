@@ -72,24 +72,28 @@ def ingest_cxi(path):
     assert len(path) == 1
     path = path[0]
 
-    h5 = h5py.File(path, 'r')
+    cxi = h5py.File(path, 'r')
+    cxi_keys = []
+    for key in cxi.keys():
+        cxi_keys.append(key)
 
-    data = h5['entry_1']['data_1']['data'][()]  # data array
-    results = h5['entry_1']['image_1']['data'][()]  # data array
-    translation = h5['entry_1']['data_1']['translation'][()]  # data coords
-    sample_x = translation[:,0] #these are the scan positions not the x/y dimensions of the image or diffraction pattern
-    sample_y = translation[:,1]
+
+    frames = h5['entry_1']['data_1']['data'][()]  # diffraction patterns 3D array (N*X*Y)
+    reconstruction = h5['entry_1']['image_1']['data'][()]  # reconstructed imnage data 2D array (X*Y)
+    translation = h5['entry_1']['data_1']['translation'][()]  # positions of diffraction patterns
+    pixel_x =  h5['entry_1']['instrument_1']['detector_1']['x_pixel_size'][()]
+    pixel_y =  h5['entry_1']['instrument_1']['detector_1']['y_pixel_size'][()]
     # sample_z = translation[:,2]
 
     energy = h5['entry_1']['instrument_1']['source_1']['energy'][()] #energy in Joule
     wavelength = speed_of_light*h/energy
     # energy_eV = energy/e
-    energy_eV = np.empty(sample_x)
-    energy_eV.fill(energy/e)
+    # energy_eV = np.empty(sample_x)
+    energy_eV = energy/e
 
     ### Create data array
     #TODO energy, coords len not matching number of frames
-    xarray = DataArray(data, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy_eV, sample_y, sample_x])
+    xarray = DataArray(reconstruction, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy_eV, sample_y, sample_x])
     dask_data = da.from_array(xarray)
 
     ### describe projections and create databroker run catalog (=run_bundle)
@@ -97,8 +101,8 @@ def ingest_cxi(path):
                         {'entry_1/data_1/data': ('primary', 'raw'),
                          'entry_1/instrument_1/source_1/energy': energy,
                          #TODO how to define sample coords from cxi
-                         'entry_1/data_1/translation': sample_x,
-                         'entry_1/data_1/translation': sample_y}
+                         'entry_1/instrument_1/detector_1/x_pixel_size': sample_x,
+                         'entry_1/instrument_1/detector_1/y_pixel_size': sample_y}
     )]
 
     # Compose bluseksy run
