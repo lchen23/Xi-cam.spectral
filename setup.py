@@ -43,8 +43,8 @@ setup(
                                           'umap = xicam.spectral.operations.decomposition:umap',
                                           'standard_scaler = xicam.spectral.operations.normalization:standard_scaler',
                                           'normalizer = xicam.spectral.operations.normalization:normalizer'],
-        "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors:ingest_nxSTXM",
-                                 'application/x-fits = xicam.spectral.ingestors:ingest_NXarpes'],
+        "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors.nxSTXM:ingest_nxSTXM",
+                                 'application/x-fits = xicam.spectral.ingestors.arpes_fits:ingest_NXarpes'],
         # "databroker.handlers": [
         #     "JPEG = xicam.catalog_viewer.image_handlers:JPEGHandler",
         #     "TIFF = xicam.catalog_viewer.image_handlers:TIFFHandler",
