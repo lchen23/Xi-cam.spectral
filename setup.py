@@ -40,7 +40,7 @@ setup(
         "xicam.plugins.GUIPlugin": ["spectral = xicam.spectral:SpectralPlugin"],
         "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors:ingest_nxSTXM"],
         "xicam.plugins.OperationPlugin": ["wiener_filter = pystxmtools.corrections.filter:WienerFilterOperation",
-                                          "median_filter = pystxmtools.corrections.filter:MedianFilterOperation",
+                                          "median_filter = pystxmtools.corrections.filter:median_filter_operation",
                                           "nl_means_filter = pystxmtools.corrections.filter:nlMeansFilter",
                                           "despike = pystxmtools.corrections.filter:Despike",
                                           "denoise = pystxmtools.corrections.filter:Denoise",

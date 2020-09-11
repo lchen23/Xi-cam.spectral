@@ -1,6 +1,6 @@
 
 from pystxmtools.corrections.register import RegisterOperation
-from pystxmtools.corrections.filter import MedianFilterOperation, WienerFilterOperation, Denoise, Despike
+from pystxmtools.corrections.filter import median_filter_operation, WienerFilterOperation, Denoise, Despike
 from pystxmtools.corrections.optical_density import CalcOpticalDensity
 from pystxmtools.corrections.fitting import LeastSquaresFit
 
@@ -16,7 +16,7 @@ class StxmWorkflow(Workflow):
 
         # Create instances of operations
         register = RegisterOperation()
-        wiener = MedianFilterOperation()
+        wiener = median_filter_operation()
         median = WienerFilterOperation()
         denoise = Denoise()
         #TODO: how can calcOD receive IO map in workflow editor

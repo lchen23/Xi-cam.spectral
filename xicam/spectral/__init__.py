@@ -6,7 +6,7 @@ from xicam.plugins.guiplugin import PanelState
 from xicam.gui.widgets.imageviewmixins import XArrayView, DepthPlot, BetterTicks, BetterLayout, BetterPlots
 from xicam.gui.widgets.dynimageview import DynImageView
 import logging
-from xicam.gui.widgets.library import LibraryWidget
+#from xicam.gui.widgets.library import LibraryWidget
 from xicam.gui.widgets.linearworkfloweditor import WorkflowEditor
 from .workflows.workflows import StxmWorkflow
 from databroker.core import BlueskyRun
@@ -43,7 +43,7 @@ class SpectralPlugin(GUIPlugin):
         self.catalog_viewer = CatalogViewerBlend()
         self.results_viewer = DynImageView()
         self.workflow_widget = WorkflowEditor
-        self.library_viewer = LibraryWidget()
+        # self.library_viewer = LibraryWidget()
 
         self._workflow = StxmWorkflow()  # Create a workflow
         self._workflow_editor = WorkflowEditor(workflow=self._workflow)
@@ -55,7 +55,7 @@ class SpectralPlugin(GUIPlugin):
 
         self.stages = {
             "Acquire": GUILayout(QWidget()),
-            "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
+            # "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
             "Map": GUILayout(self.catalog_viewer, right=self._workflow_editor, bottom=self.results_viewer),
             "Decomposition": GUILayout(QWidget()),
             "Clustering": GUILayout(QWidget()),
