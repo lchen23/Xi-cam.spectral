@@ -12,9 +12,10 @@ def ingest_cxi(path):
 
     # assert len(path) == 1
     # path = path[0]
+    # /Users/jreinhardt/Data/ALS/NS_200805056_full.cxi"
 
     h5 = h5py.File(path, 'r')
-    #TODO: maybe sorting not needed, since energies might be in 'random' order anyways --> sort later by energy
+    #TODO: How to sort dict by energies?
     h5_entry_dict = {}
     for key in h5.keys():
         if 'entry' in key:
@@ -40,10 +41,17 @@ def ingest_cxi(path):
         # frames_stack.append(h5[entry[0]]['data_1']['data'][()])  # diffraction patterns 3D array (N*X*Y)
         rec = h5[entry[0]]['image_1']['data'][()]
         rec_stack.append(rec)  # reconstructed image data 2D array (X*Y)
+        energy = h5[entry[0]]['instrument_1']['source_1']['energy'][()]
+        energy_stack.append(energy)      # energy in Joule
+        energy_eV_stack.append(energy/e)
+        wavelength_stack.append(speed_of_light/energy)
+        #TODO since pixelsize is different for each energy --> one coord system needs to be defined (resize all to largest pixels?)
+        #see reset function in David's stack.py
         pixel_x = h5[entry[0]]['instrument_1']['detector_1']['x_pixel_size'][()]
         pixel_y = h5[entry[0]]['instrument_1']['detector_1']['y_pixel_size'][()]
         pixel_x_stack.append(pixel_x)
         pixel_y_stack.append(pixel_y)
+
         coords_x = []
         coords_y = []
         for i in range(dim_x):
@@ -52,22 +60,18 @@ def ingest_cxi(path):
             coords_y.append(pixel_y*i)
         coords_x_stack.append(np.asarray(coords_x))
         coords_y_stack.append(np.asarray(coords_y))
-        energy = h5[entry[0]]['instrument_1']['source_1']['energy'][()]
-        energy_stack.append(energy)      # energy in Joule
-        energy_eV_stack.append(energy/e)
-        wavelength_stack.append(speed_of_light/energy)
         # translation = h5['entry_1']['data_1']['translation'][()]  # positions of diffraction patterns
 
     recs = np.asarray(rec_stack)
 
 
-        #/Users/jreinhardt/Data/ALS/NS_200805056_full.cxi"
-    ### Create data array
-    # #TODO energy, coords len not matching number of frames
-    #xarray = DataArray(rec_stack, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy_eV_stack, coords_x, coords_y])
-    # dask_data = da.from_array(xarray)
 
-    return energy_eV_stack, recs, coords_x_stack, coords_y_stack, pixel_x_stack
+    ### Create data array
+    xarray = DataArray(rec_stack, dims=('E', 'y', 'x'), coords=[energy_eV_stack, coords_x, coords_y])
+    xarray_sortE = xarray.sorted('E')
+    dask_data = da.from_array(xarray)
+
+    return energy_eV_stack, recs, coords_x_stack, coords_y_stack, xarray, dask_data
 
     # ### describe projections and create databroker run catalog (=run_bundle)
     # projections = [('NXcxi_ptycho',
