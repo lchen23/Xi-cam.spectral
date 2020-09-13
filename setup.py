@@ -39,17 +39,17 @@ setup(
     entry_points={
         "xicam.plugins.GUIPlugin": ["spectral = xicam.spectral:SpectralPlugin"],
         "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors:ingest_nxSTXM"],
-        "xicam.plugins.OperationPlugin": ["wiener_filter = pystxmtools.corrections.filter:WienerFilterOperation",
+        "xicam.plugins.OperationPlugin": ["wiener_filter = pystxmtools.corrections.filter:wiener_filter_operation",
                                           "median_filter = pystxmtools.corrections.filter:median_filter_operation",
-                                          "nl_means_filter = pystxmtools.corrections.filter:nlMeansFilter",
-                                          "despike = pystxmtools.corrections.filter:Despike",
-                                          "denoise = pystxmtools.corrections.filter:Denoise",
-                                          "calc_optical_density = pystxmtools.corrections.optical_density:CalcOpticalDensity",
-                                          "get_I0_mask = pystxmtools.corrections.optical_density:CalcI0Mask",
+                                          "nl_means_filter = pystxmtools.corrections.filter:nl_means_filter_operation",
+                                          "despike = pystxmtools.corrections.filter:despike_operation",
+                                          "denoise = pystxmtools.corrections.filter:denoise_operation",
+                                          "calc_optical_density = pystxmtools.corrections.optical_density:calc_opt_density_operation",
+                                          "get_I0_mask = pystxmtools.corrections.optical_density:calc_I0_mask_operation",
                                           "register_stack = pystxmtools.corrections.register:RegisterOperation",
-                                          "lin_fit_spectra = pystxmtools.corrections.fitting:LinFitSpectra",
-                                          "lstsq_fit = pystxmtools.corrections.fitting:LeastSquaresFit",
-                                          "nn_lstsq = pystxmtools.corrections.fitting:NNLeastSquaresFit"]
+                                          "lin_fit_spectra = pystxmtools.corrections.fitting:lin_fit_operation",
+                                          "lstsq_fit = pystxmtools.corrections.fitting:lsq_fit_operation",
+                                          "nn_lstsq = pystxmtools.corrections.fitting:nn_lsq_fit_operation"]
         # "databroker.handlers": [
         #     "JPEG = xicam.catalog_viewer.image_handlers:JPEGHandler",
         #     "TIFF = xicam.catalog_viewer.image_handlers:TIFFHandler",
