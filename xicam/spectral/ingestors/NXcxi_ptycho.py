@@ -90,12 +90,9 @@ def ingest_cxi(path):
 
     # Compose bluesky run
     run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle
-
     #Create start document
     start_doc = run_bundle.start_doc
     start_doc["sample_name"] = Path(paths[0]).resolve().stem
-
-    #TODO add projections once defined
     start_doc["projections"] = projections
     yield 'start', start_doc
 
@@ -115,11 +112,9 @@ def ingest_cxi(path):
 
     yield 'event', frame_stream_bundle.compose_event(data={'raw': dask_data},
                                                      timestamps={'raw': time.time()})
-
     #create stop document
     yield 'stop', run_bundle.compose_stop()
 
-    return run_bundle
 
 if __name__ == '__main__':
     ingest_cxi('/Users/jreinhardt/Data/ALS/NS_200805056_full.cxi')
