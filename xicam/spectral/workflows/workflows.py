@@ -1,5 +1,5 @@
 
-from pystxmtools.corrections.register import RegisterOperation
+from pystxmtools.corrections.register import register_operation
 from pystxmtools.corrections.filter import median_filter_operation, wiener_filter_operation, denoise_operation, despike_operation
 from pystxmtools.corrections.optical_density import calc_opt_density_operation
 from pystxmtools.corrections.fitting import lsq_fit_operation
@@ -15,7 +15,7 @@ class StxmWorkflow(Workflow):
         super(StxmWorkflow, self).__init__(name="STXM Workflow")
 
         # Create instances of operations
-        register = RegisterOperation()
+        register = register_operation()
         wiener = median_filter_operation()
         median = wiener_filter_operation()
         denoise = denoise_operation()

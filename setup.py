@@ -46,7 +46,7 @@ setup(
                                           "denoise = pystxmtools.corrections.filter:denoise_operation",
                                           "calc_optical_density = pystxmtools.corrections.optical_density:calc_opt_density_operation",
                                           "get_I0_mask = pystxmtools.corrections.optical_density:calc_I0_mask_operation",
-                                          "register_stack = pystxmtools.corrections.register:RegisterOperation",
+                                          "register_stack = pystxmtools.corrections.register:register_operation",
                                           "lin_fit_spectra = pystxmtools.corrections.fitting:lin_fit_operation",
                                           "lstsq_fit = pystxmtools.corrections.fitting:lsq_fit_operation",
                                           "nn_lstsq = pystxmtools.corrections.fitting:nn_lsq_fit_operation"]
