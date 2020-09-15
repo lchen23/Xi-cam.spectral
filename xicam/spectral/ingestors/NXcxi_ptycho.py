@@ -13,7 +13,6 @@ def ingest_cxi(paths):
     assert len(paths) == 1
     path = paths[0]
 
-
     h5 = h5py.File(path, 'r')
     #TODO: How to sort dict by energies?
     h5_entry_dict = {}
@@ -33,7 +32,6 @@ def ingest_cxi(paths):
     rec_shape = h5['entry_1']['image_1']['data'][()].shape
     dim_x = rec_shape[0]
     dim_y = rec_shape[1]
-
 
     def rec_psize_nm(energy, corner_x, corner_y, corner_z):
         l = (1239.852 / (energy/e)) * 1e-9
@@ -71,7 +69,6 @@ def ingest_cxi(paths):
     dask_data = da.from_array(xarray_sortE)
 
     # return energy_eV_stack, recs, pxsize, xarray, dask_data
-
     ### describe projections and create databroker run catalog (=run_bundle)
     projections = [('NXcxi_ptycho',
                         {'entry_1/data_1/data': ('primary', 'raw'),
@@ -95,7 +92,7 @@ def ingest_cxi(paths):
                                'dtype': 'number',
                                'dims': xarray.dims,
                                # 'coords': [energy, sample_y, sample_x],
-                               'shape': recs.shape}}
+                               'shape': np.asarray(rec_stack).shape}}
     frame_stream_name = 'primary'
     frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
                                                         name=frame_stream_name,
