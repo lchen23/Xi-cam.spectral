@@ -44,7 +44,8 @@ setup(
                                           'standard_scaler = xicam.spectral.operations.normalization:standard_scaler',
                                           'normalizer = xicam.spectral.operations.normalization:normalizer'],
         "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors:ingest_nxSTXM",
-                                 'application/x-fits = xicam.spectral.ingestors:ingest_NXarpes'],
+                                 'application/x-fits = xicam.spectral.ingestors:ingest_NXarpes',
+                                 'application/x-cxi = xicam.spectral.ingestors:ingest_cxi'],
         # "databroker.handlers": [
         #     "JPEG = xicam.catalog_viewer.image_handlers:JPEGHandler",
         #     "TIFF = xicam.catalog_viewer.image_handlers:TIFFHandler",
