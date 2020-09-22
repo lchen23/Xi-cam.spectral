@@ -68,24 +68,27 @@ def ingest_cxi(paths):
         return np.round(l / 2. / NA * 1e9, 2)
 
     for entry in sorted_entry_list:
-        #TODO" use dask lazy loading
-        rec = h5[entry[0]]['image_1']['data'][()]
+        # rec = h5[entry[0]]['image_1']['data'][()]
+        rec = da.from_array(h5[entry[0]]['image_1']['data'])
         rec_stack.append(rec)  # reconstructed image data 2D array (X*Y)
+
         energy = h5[entry[0]]['instrument_1']['source_1']['energy'][()]
         energy_stack.append(energy)      # energy in Joule
         energy_eV_stack.append(energy/e)
         wavelength_stack.append(speed_of_light/energy)
 
         # TODO if diffraction patterns are required load them and their positions
-        # frames_stack.append(h5[entry[0]]['data_1']['data'][()])  # diffraction patterns 3D array (N*X*Y)
+        # frames_stack.append(da.from_array(h5[entry[0]]['data_1']['data']))  # diffraction patterns 3D array (N*X*Y)
         # translation = h5['entry_1']['data_1']['translation'][()]  # positions of diffraction patterns
 
     # TODO
     #  [x] get pixelsize from cxi file or calculate from corner_position and energy
     #  [ ] what if multiple scans with different pixel size should be compared?
+    #  [ ] check if energy is in J or eV?
     try:
         pxsize = h5['entry_1/image_1/pixel_size'][()]
     except KeyError:
+        print('Image pixel size not found in file >> calculating from corner position and energy')
         corner_x, corner_y, corner_z = h5[entry[0]]['instrument_1/detector_1/corner_position'][()]
         pxsize = rec_psize_nm(energy, corner_x, corner_y, corner_z)
 
@@ -94,10 +97,9 @@ def ingest_cxi(paths):
     coords_y = [pxsize*i for i in range(dim_y)]
 
     ### Create data array
-    xarray = DataArray(rec_stack, dims=('E [eV]', 'y [nm]', 'x [nm]'), coords=[energy_eV_stack, coords_x, coords_y])
+    xarray = DataArray(rec_stack, dims=('E [eV]', 'y [nm]', 'x [nm]'), coords=[energy_eV_stack, coords_y, coords_x])
     xarray_sortE = xarray.sortby('E [eV]')
-    dask_data = da.from_array(xarray_sortE)
-    # return energy_eV_stack, recs, pxsize, xarray, dask_data
+    # return energy_eV_stack, rec_stack, pxsize, xarray#, xarray_sortE #,dask_data
 
 
     # Compose bluesky run
@@ -117,13 +119,13 @@ def ingest_cxi(paths):
                                'shape': np.asarray(rec_stack).shape},
                        ENERGY_FIELD: {'source': source,
                                       'dtype': 'number',
-                                      'shape': np.asarray(energy).shape},
-                       COORDS_X_FIELD: {'source': source,
-                                        'dtype': 'number',
-                                        'shape': np.asarray(coords_x).shape},
+                                      'shape': xarray[ENERGY_FIELD].shape},
                        COORDS_Y_FIELD: {'source': source,
                                         'dtype': 'number',
-                                        'shape': np.asarray(coords_y).shape}
+                                        'shape': xarray[COORDS_Y_FIELD].shape},
+                       COORDS_X_FIELD: {'source': source,
+                                        'dtype': 'number',
+                                        'shape': xarray[COORDS_X_FIELD].shape}
                        }
 
 
@@ -134,11 +136,17 @@ def ingest_cxi(paths):
                                                         )
     yield 'descriptor', frame_stream_bundle.descriptor_doc
 
-    yield 'event', frame_stream_bundle.compose_event(data={'raw': dask_data},
-                                                     timestamps={'raw': time.time()})
+    yield 'event', frame_stream_bundle.compose_event(data={'raw': xarray,
+                                                           ENERGY_FIELD: energy,
+                                                           COORDS_Y_FIELD: coords_y,
+                                                           COORDS_X_FIELD: coords_x},
+                                                     timestamps={'raw': time.time(),
+                                                                 ENERGY_FIELD: time.time(),
+                                                                 COORDS_Y_FIELD: time.time(),
+                                                                 COORDS_X_FIELD: time.time()})
     #create stop document
     yield 'stop', run_bundle.compose_stop()
-
-
+#
+#
 # if __name__ == '__main__':
 #     ingest_cxi('/Users/jreinhardt/Data/ALS/NS_200805056_full.cxi')
