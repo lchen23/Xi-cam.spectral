@@ -110,7 +110,6 @@ def ingest_cxi(paths):
     start_doc["projections"] = projections
     yield 'start', start_doc
 
-    # Compose descriptor
     source = 'nx_cxi'
     frame_data_keys = {'derived': {'source': source,
                                'dtype': 'number',
@@ -130,6 +129,7 @@ def ingest_cxi(paths):
 
 
     frame_stream_name = 'primary'
+    # Compose descriptor
     frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
                                                         name=frame_stream_name,
                                                         # configuration=_metadata(path)
