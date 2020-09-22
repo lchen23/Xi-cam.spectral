@@ -5,8 +5,7 @@ from sklearn.preprocessing import StandardScaler, Normalizer
 
 
 @operation
-@categories('Normalization')
-# @categories(('Spectral Imaging', 'Normalization'), ('BSISB', 'Normalization'))
+@categories(('Spectral Imaging', 'Normalization'), ('BSISB', 'Normalization'))
 @display_name('Standard Scaler')
 @output_names('data')
 @visible('data', False)
@@ -24,11 +23,10 @@ class Norm(enum.Enum):
 
 
 @operation
-@categories('Normalization')
-# @categories(('Spectral Imaging', 'Normalization'), ('BSISB', 'Normalization'))
+@categories(('Spectral Imaging', 'Normalization'), ('BSISB', 'Normalization'))
 @display_name('Normalizer')
 @output_names('data')
 @visible('data', False)
-def normalizer(data: np.ndarray, norm: Norm = Norm.l2, copy:bool=True):
+def normalizer(data: np.ndarray, norm: Norm = Norm.l2.name, copy:bool=True):
     transformer = Normalizer(norm=norm, copy=copy).fit(data)
     return transformer.transform(data, copy)
