@@ -93,13 +93,18 @@ def ingest_cxi(paths):
         pxsize = rec_psize_nm(energy, corner_x, corner_y, corner_z)
 
     # calc coords from pxsize
+    # coords_x = []
+    # coords_y = []
+    # for n in range(len(energy_eV_stack)):
+    #     coords_x.append([pxsize*i for i in range(dim_x)])
+    #     coords_y.append([pxsize*i for i in range(dim_x)])
     coords_x = [pxsize*i for i in range(dim_x)]
     coords_y = [pxsize*i for i in range(dim_y)]
 
     ### Create data array
     xarray = DataArray(rec_stack, dims=('E [eV]', 'y [nm]', 'x [nm]'), coords=[energy_eV_stack, coords_y, coords_x])
     xarray_sortE = xarray.sortby('E [eV]')
-    # return energy_eV_stack, rec_stack, pxsize, xarray#, xarray_sortE #,dask_data
+    #return energy_eV_stack, rec_stack, pxsize, xarray#, xarray_sortE #,dask_data
 
 
     # Compose bluesky run
@@ -118,13 +123,13 @@ def ingest_cxi(paths):
                                'shape': np.asarray(rec_stack).shape},
                        ENERGY_FIELD: {'source': source,
                                       'dtype': 'number',
-                                      'shape': xarray[ENERGY_FIELD].shape},
+                                      'shape': np.asarray(energy_eV_stack).shape},
                        COORDS_Y_FIELD: {'source': source,
                                         'dtype': 'number',
-                                        'shape': xarray[COORDS_Y_FIELD].shape},
+                                        'shape': np.asarray(coords_x).shape},
                        COORDS_X_FIELD: {'source': source,
                                         'dtype': 'number',
-                                        'shape': xarray[COORDS_X_FIELD].shape}
+                                        'shape': np.asarray(coords_y).shape}
                        }
 
 
@@ -136,17 +141,17 @@ def ingest_cxi(paths):
                                                         )
     yield 'descriptor', frame_stream_bundle.descriptor_doc
 
-    yield 'event', frame_stream_bundle.compose_event(data={'raw': xarray,
+    yield 'event', frame_stream_bundle.compose_event(data={'derived': xarray,
                                                            ENERGY_FIELD: energy,
                                                            COORDS_Y_FIELD: coords_y,
                                                            COORDS_X_FIELD: coords_x},
-                                                     timestamps={'raw': time.time(),
+                                                     timestamps={'derived': time.time(),
                                                                  ENERGY_FIELD: time.time(),
                                                                  COORDS_Y_FIELD: time.time(),
                                                                  COORDS_X_FIELD: time.time()})
     #create stop document
     yield 'stop', run_bundle.compose_stop()
-#
+# #
 #
 # if __name__ == '__main__':
 #     ingest_cxi('/Users/jreinhardt/Data/ALS/NS_200805056_full.cxi')
