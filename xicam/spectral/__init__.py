@@ -9,7 +9,7 @@ from xicam.gui.widgets.library import LibraryWidget
 from xicam.gui.widgets.linearworkfloweditor import WorkflowEditor
 from databroker.core import BlueskyRun
 from xicam.core.execution import Workflow
-from xarray import DataArray
+import xarray as xr
 
 
 def project_nxSTXM(run_catalog: BlueskyRun):
@@ -19,11 +19,11 @@ def project_nxSTXM(run_catalog: BlueskyRun):
     sample_y = projection['irmap/DATA/sample_y']
     energy = projection['irmap/DATA/energy']
 
-    xdata = getattr(run_catalog, stream).to_dask()[field]  # type: DataArray
+    xdata = getattr(run_catalog, stream).to_dask()[field]  # type: xr.DataArray
 
     xdata = np.squeeze(xdata)
 
-    xdata = xdata.assign_coords({xdata.dims[0]: energy, xdata.dims[1]: sample_y, xdata.dims[2]: sample_x})
+    xdata = xdata.assign_coords({xdata.dims[0]: energy, xdata.dims[2]: sample_x, xdata.dims[1]: sample_y})
 
     return xdata
 
@@ -49,7 +49,8 @@ class SpectralPlugin(GUIPlugin):
 
         self.treatment_workflow = Workflow()
         self.treatment_editor = WorkflowEditor(self.treatment_workflow,
-                                               callback_slot=self.show_treatment,
+                                               callback_slot=self.append_treatment,
+                                               finished_slot=self.show_treatment,
                                                kwargs_callable=self.treatment_kwargs,
                                                execute_iterative=True)
 
@@ -66,15 +67,16 @@ class SpectralPlugin(GUIPlugin):
 
         # FIXME: Putting this here for now...
         self.current_data = None
-        return {'data':project_nxSTXM(self.current_catalog)}
+        return {'data': project_nxSTXM(self.current_catalog)}
 
-    def show_treatment(self, result_set):
+    def append_treatment(self, result_set):
         if self.current_data is None:
-            self.current_data = np.expand_dims(result_set['data'], 0)
+            self.current_data = result_set['data']
         else:
-            self.current_data = np.stack([*self.current_data, result_set['data']])  # FIXME do this better
+            self.current_data = xr.concat([self.current_data, result_set['data']], dim='E (eV)')  # FIXME do this better
 
-        self.catalog_viewer.setImage(self.current_data, reset_crosshair=False)
+    def show_treatment(self):
+        self.catalog_viewer.setImage(self.current_data, reset_crosshair=True, autoRange=True)
 
     def appendCatalog(self, run_catalog, **kwargs):
         self.current_catalog = run_catalog
