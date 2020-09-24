@@ -3,9 +3,9 @@ from qtpy.QtWidgets import QLabel, QComboBox, QHBoxLayout, QWidget, QSpacerItem,
 from xicam.core import msg
 from xicam.plugins import GUIPlugin, GUILayout
 from xicam.plugins.guiplugin import PanelState
-from xicam.gui.widgets.imageviewmixins import XArrayView, DepthPlot, BetterTicks, BetterLayout, BetterPlots
+from xicam.gui.widgets.imageviewmixins import XArrayView, CatalogView#, DepthPlot, BetterTicks, BetterLayout, BetterPlots
 import logging
-from xicam.gui.widgets.library import LibraryWidget
+#from xicam.gui.widgets.library import LibraryWidget
 from xicam.gui.widgets.linearworkfloweditor import WorkflowEditor
 from databroker.core import BlueskyRun
 from xicam.core.execution import Workflow
@@ -28,25 +28,26 @@ def project_nxSTXM(run_catalog: BlueskyRun):
     return xdata
 
 
-class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
-    def __init__(self, *args, **kwargs):
-        # CatalogViewerBlend inherits methods from XArrayView and CatalogView
-        # super allows us to access both methods when calling super() from Blend
-        super(CatalogViewerBlend, self).__init__(*args, **kwargs)
+# class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
+#     def __init__(self, *args, **kwargs):
+#         # CatalogViewerBlend inherits methods from XArrayView and CatalogView
+#         # super allows us to access both methods when calling super() from Blend
+#         super(CatalogViewerBlend, self).__init__(*args, **kwargs)
 
 
 class SpectralPlugin(GUIPlugin):
     name = "Spectral"
 
     def __init__(self):
-        self.catalog_viewer = CatalogViewerBlend()
-        self.library_viewer = LibraryWidget()
+        # self.catalog_viewer = CatalogViewerBlend()
+        self.catalog_viewer = CatalogView()
+        #self.library_viewer = LibraryWidget()
 
         self.treatment_workflow = Workflow()
 
         self.stages = {
             "Acquire": GUILayout(QWidget()),
-            "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
+            #"Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
             "Map": GUILayout(self.catalog_viewer, right=WorkflowEditor(self.treatment_workflow)),
             "Decomposition": GUILayout(QWidget()),
             "Clustering": GUILayout(QWidget()),
