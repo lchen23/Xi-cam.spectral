@@ -27,6 +27,8 @@ def project_nxSTXM(run_catalog: BlueskyRun):
 
     return xdata
 
+def project_NXcxi_ptycho(run_catalog: BlueskyRun):
+    ...
 
 # class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
 #     def __init__(self, *args, **kwargs):
