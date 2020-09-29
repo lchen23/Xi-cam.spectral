@@ -14,7 +14,7 @@ COORDS_X_FIELD = 'x [nm]'
 COORDS_Y_FIELD = 'y [nm]'
 
 ### describe projections
-projections = [{'name': 'NXcxi_ptycho',
+projections = [{'name': 'nxCXI_ptycho',
                 'version': '0.1.0',
                 'projection':
                     {'data': {'type': 'linked',
@@ -108,7 +108,7 @@ def ingest_cxi(paths):
     start_doc["projections"] = projections
     yield 'start', start_doc
 
-    source = 'nx_cxi'
+    source = 'nxCXI_ptycho'
     frame_data_keys = {'derived': {'source': source,
                                'dtype': 'number',
                                'dims': xarray.dims,
