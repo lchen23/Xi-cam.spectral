@@ -68,10 +68,8 @@ def ingest_cxi(paths):
         return np.round(l / 2. / NA * 1e9, 2)
 
     for entry in sorted_entry_list:
-        # rec = h5[entry[0]]['image_1']['data'][()]
         rec = da.from_array(h5[entry[0]]['image_1']['data'])
         rec_stack.append(rec)  # reconstructed image data 2D array (X*Y)
-
         energy = h5[entry[0]]['instrument_1']['source_1']['energy'][()]
         energy_stack.append(energy)      # energy in Joule
         energy_eV_stack.append(energy/e)
@@ -93,11 +91,6 @@ def ingest_cxi(paths):
         pxsize = rec_psize_nm(energy, corner_x, corner_y, corner_z)
 
     # calc coords from pxsize
-    # coords_x = []
-    # coords_y = []
-    # for n in range(len(energy_eV_stack)):
-    #     coords_x.append([pxsize*i for i in range(dim_x)])
-    #     coords_y.append([pxsize*i for i in range(dim_x)])
     coords_x = [pxsize*i for i in range(dim_x)]
     coords_y = [pxsize*i for i in range(dim_y)]
 
@@ -120,7 +113,7 @@ def ingest_cxi(paths):
                                'dtype': 'number',
                                'dims': xarray.dims,
                                # 'coords': [energy, sample_y, sample_x],
-                               'shape': np.asarray(rec_stack).shape},
+                               'shape': xarray.shape},
                        ENERGY_FIELD: {'source': source,
                                       'dtype': 'number',
                                       'shape': np.asarray(energy_eV_stack).shape},
@@ -140,18 +133,15 @@ def ingest_cxi(paths):
                                                         # configuration=_metadata(path)
                                                         )
     yield 'descriptor', frame_stream_bundle.descriptor_doc
-
+    t = time.time()
     yield 'event', frame_stream_bundle.compose_event(data={'derived': xarray,
-                                                           ENERGY_FIELD: energy,
+                                                           ENERGY_FIELD: energy_eV_stack,
                                                            COORDS_Y_FIELD: coords_y,
                                                            COORDS_X_FIELD: coords_x},
-                                                     timestamps={'derived': time.time(),
-                                                                 ENERGY_FIELD: time.time(),
-                                                                 COORDS_Y_FIELD: time.time(),
-                                                                 COORDS_X_FIELD: time.time()})
+                                                     timestamps={'derived': t,
+                                                                 ENERGY_FIELD: t,
+                                                                 COORDS_Y_FIELD: t,
+                                                                 COORDS_X_FIELD: t})
     #create stop document
     yield 'stop', run_bundle.compose_stop()
-# #
-#
-# if __name__ == '__main__':
-#     ingest_cxi('/Users/jreinhardt/Data/ALS/NS_200805056_full.cxi')
+
