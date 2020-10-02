@@ -20,15 +20,12 @@ def project_nxSTXM(run_catalog: BlueskyRun):
     energy = projection['irmap/DATA/energy']
 
     xdata = getattr(run_catalog, stream).to_dask()[field]  # type: DataArray
-
     xdata = np.squeeze(xdata)
-
     xdata = xdata.assign_coords({xdata.dims[0]: energy, xdata.dims[1]: sample_y, xdata.dims[2]: sample_x})
 
     return xdata
 
-def project_NXcxi_ptycho(run_catalog: BlueskyRun):
-    # TODO: merge different projectors and check projection name to decide which data was loaded
+def project_nxCXI_ptycho(run_catalog: BlueskyRun):
     projection = next(filter(lambda projection: projection['name'] == 'nxCXI_ptycho', run_catalog.metadata['start']['projections']))
 
     rec_stream = projection['projection']['data']['stream']
@@ -72,7 +69,6 @@ class SpectralPlugin(GUIPlugin):
         try:
             self.stream_fields = get_all_image_fields(run_catalog)
             stream_names = get_all_streams(run_catalog)
-
             msg.showMessage(f"Loading primary image for {run_catalog.name}")
             # # try and startup with primary catalog and whatever fields it has
             # if "primary" in self.stream_fields:
@@ -80,10 +76,23 @@ class SpectralPlugin(GUIPlugin):
             # else:
             #     default_stream_name = list(self.stream_fields.keys())[0]
 
-            # Apply nxSTXM projection
-            xdata = project_NXcxi_ptycho(run_catalog).data
+            # Try different projections until success
+            projectors = [project_nxSTXM, project_nxCXI_ptycho]
+            intent = None
+            for projector in projectors:
+                try:
+                    intent = projector(run_catalog).data
+                except Exception as ex:
+                    msg.logError(ex)
+                    msg.showMessage(str(ex), 'trying next projector')
+                if type(intent) == np.ndarray:
+                    print('Using ', str(projector))
+                    break
+            else:
+                msg.logMessage('No working projector found')
+                print('No working projector found')
 
-            self.catalog_viewer.setImage(xdata)
+            self.catalog_viewer.setImage(intent)
 
         except Exception as e:
             msg.logError(e)
