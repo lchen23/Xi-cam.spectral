@@ -28,18 +28,19 @@ def project_nxSTXM(run_catalog: BlueskyRun):
     return xdata
 
 def project_NXcxi_ptycho(run_catalog: BlueskyRun):
+    # TODO: merge different projectors and check projection name to decide which data was loaded
     projection = next(filter(lambda projection: projection['name'] == 'nxCXI_ptycho', run_catalog.metadata['start']['projections']))
 
     rec_stream = projection['projection']['data']['stream']
     rec_field = projection['projection']['data']['field']
-    energy_stream = projection['projection']['energy']['stream']
-    energy_field = projection['projection']['energy']['field']
-    coords_x_stream = projection['projection']['coords_x']['stream']
-    coords_x_field = projection['projection']['coords_x']['field']
-    coords_y_stream = projection['projection']['coords_y']['stream']
-    coords_y_field = projection['projection']['coords_y']['field']
+    energy = run_catalog.primary.read()['E [eV]'].data[0]
+    coords_x = run_catalog.primary.read()['x [nm]'].data[0]
+    coords_y = run_catalog.primary.read()['y [nm]'].data[0]
 
-    rec_data = getattr(run_catalog, rec_stream).to_dask()
+    rec_data = getattr(run_catalog, rec_stream).to_dask()[rec_field]
+    rec_data = np.squeeze(rec_data)
+    rec_data = rec_data.assign_coords({rec_data.dims[0]: energy, rec_data.dims[1]: coords_y, rec_data.dims[2]: coords_x})
+    return rec_data
 
 # class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
 #     def __init__(self, *args, **kwargs):
@@ -80,7 +81,7 @@ class SpectralPlugin(GUIPlugin):
             #     default_stream_name = list(self.stream_fields.keys())[0]
 
             # Apply nxSTXM projection
-            xdata = project_nxSTXM(run_catalog)
+            xdata = project_NXcxi_ptycho(run_catalog).data
 
             self.catalog_viewer.setImage(xdata)
 
