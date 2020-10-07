@@ -13,7 +13,7 @@ ENERGY_FIELD = 'E [eV]'
 COORDS_X_FIELD = 'x [nm]'
 COORDS_Y_FIELD = 'y [nm]'
 
-### describe projections
+### describe projections (not needed for CatalogViewer but for technique-specific plugin that will use intents
 # TODO match key names with NX structures
 projections = [{'name': 'nxCXI_ptycho',
                 'version': '0.1.0',
@@ -120,7 +120,7 @@ def ingest_cxi(paths):
                                'dims': xarray_trans.dims,
                                # 'coords': [energy, sample_y, sample_x],
                                'shape': xarray_trans.shape},
-                       'phases': {'source': source,
+                       'phase': {'source': source,
                                'dtype': 'number',
                                'dims': xarray_phase.dims,
                                # 'coords': [energy, sample_y, sample_x],
@@ -136,7 +136,7 @@ def ingest_cxi(paths):
                                         'shape': np.asarray(coords_y).shape}
                        }
 
-
+    # TODO: decide on stream names for derived data
     frame_stream_name = 'primary'
     # Compose descriptor
     frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
@@ -146,12 +146,12 @@ def ingest_cxi(paths):
     yield 'descriptor', frame_stream_bundle.descriptor_doc
     t = time.time()
     yield 'event', frame_stream_bundle.compose_event(data={'transmission': xarray_trans,
-                                                           'phases':xarray_phase,
+                                                           'phase': xarray_phase,
                                                            ENERGY_FIELD: energy_eV_stack,
                                                            COORDS_Y_FIELD: coords_y,
                                                            COORDS_X_FIELD: coords_x},
                                                      timestamps={'transmission': t,
-                                                                 'phases': t,
+                                                                 'phase': t,
                                                                  ENERGY_FIELD: t,
                                                                  COORDS_Y_FIELD: t,
                                                                  COORDS_X_FIELD: t})
