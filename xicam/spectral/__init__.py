@@ -38,10 +38,19 @@ def project_nxCXI_ptycho(run_catalog: BlueskyRun):
 
     # rec_data = getattr(run_catalog, transmission_rec_stream).to_dask().rename({transmission_rec_field: 'object_transmission', \
     #                                                                           phase_rec_field: 'object_phase'})
-    rec_data = getattr(run_catalog, transmission_rec_stream).to_dask()[transmission_rec_field]
-    rec_data = np.squeeze(rec_data)
-    rec_data = rec_data.assign_coords({rec_data.dims[0]: energy, rec_data.dims[1]: coords_y, rec_data.dims[2]: coords_x})
-    return rec_data
+    rec_data_trans = getattr(run_catalog, transmission_rec_stream).to_dask()[transmission_rec_field]
+    rec_data_trans = np.squeeze(rec_data_trans)
+    rec_data_phase = getattr(run_catalog, phase_rec_stream).to_dask()[phase_rec_field]
+    rec_data_phase = np.squeeze(rec_data_phase)
+
+    try: #if hints are implemented
+        from hints import ImageHint
+        return [ImageHint(image = rec_data_trans, category='transmission reconstruction'),
+                ImageHint(image=rec_data_phase, category='phase reconstruction')]
+
+    except:
+        rec_data_trans = rec_data_trans.assign_coords({rec_data_trans.dims[0]: energy, rec_data_trans.dims[1]: coords_y, rec_data_trans.dims[2]: coords_x})
+        return rec_data_trans
 
 # class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
 #     def __init__(self, *args, **kwargs):
