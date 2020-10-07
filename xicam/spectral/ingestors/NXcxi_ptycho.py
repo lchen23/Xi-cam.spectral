@@ -14,13 +14,18 @@ COORDS_X_FIELD = 'x [nm]'
 COORDS_Y_FIELD = 'y [nm]'
 
 ### describe projections
+# TODO match key names with NX structures
 projections = [{'name': 'nxCXI_ptycho',
                 'version': '0.1.0',
                 'projection':
-                    {'data': {'type': 'linked',
+                    {'object_transmission': {'type': 'linked',
                               'stream': 'primary',
                               'location': 'event',
-                              'field': 'derived'},
+                              'field': 'transmission'},
+                     'object_phase': {'type': 'linked',
+                              'stream': 'primary',
+                              'location': 'event',
+                              'field': 'phase'},
                      'energy': {'type': 'linked',
                                 'stream': 'primary',
                                 'location': 'event',
@@ -95,8 +100,9 @@ def ingest_cxi(paths):
     coords_y = [pxsize*i for i in range(dim_y)]
 
     ### Create data array
-    xarray = DataArray(np.abs(rec_stack), dims=('E [eV]', 'y [nm]', 'x [nm]'), coords=[energy_eV_stack, coords_y, coords_x])
-    xarray_sortE = xarray.sortby('E [eV]')
+    xarray_trans = DataArray(np.abs(rec_stack), dims=('E [eV]', 'y [nm]', 'x [nm]'), coords=[energy_eV_stack, coords_y, coords_x])
+    xarray_phase = DataArray(np.angle(rec_stack), dims=('E [eV]', 'y [nm]', 'x [nm]'), coords=[energy_eV_stack, coords_y, coords_x])
+    # xarray_sortE = xarray.sortby('E [eV]')
     #return energy_eV_stack, rec_stack, pxsize, xarray#, xarray_sortE #,dask_data
 
 
@@ -109,11 +115,16 @@ def ingest_cxi(paths):
     yield 'start', start_doc
 
     source = 'nxCXI_ptycho'
-    frame_data_keys = {'derived': {'source': source,
+    frame_data_keys = {'transmission': {'source': source,
                                'dtype': 'number',
-                               'dims': xarray.dims,
+                               'dims': xarray_trans.dims,
                                # 'coords': [energy, sample_y, sample_x],
-                               'shape': xarray.shape},
+                               'shape': xarray_trans.shape},
+                       'phases': {'source': source,
+                               'dtype': 'number',
+                               'dims': xarray_phase.dims,
+                               # 'coords': [energy, sample_y, sample_x],
+                               'shape': xarray_phase.shape},
                        ENERGY_FIELD: {'source': source,
                                       'dtype': 'number',
                                       'shape': np.asarray(energy_eV_stack).shape},
@@ -134,11 +145,13 @@ def ingest_cxi(paths):
                                                         )
     yield 'descriptor', frame_stream_bundle.descriptor_doc
     t = time.time()
-    yield 'event', frame_stream_bundle.compose_event(data={'derived': xarray,
+    yield 'event', frame_stream_bundle.compose_event(data={'transmission': xarray_trans,
+                                                           'phases':xarray_phase,
                                                            ENERGY_FIELD: energy_eV_stack,
                                                            COORDS_Y_FIELD: coords_y,
                                                            COORDS_X_FIELD: coords_x},
-                                                     timestamps={'derived': t,
+                                                     timestamps={'transmission': t,
+                                                                 'phases': t,
                                                                  ENERGY_FIELD: t,
                                                                  COORDS_Y_FIELD: t,
                                                                  COORDS_X_FIELD: t})

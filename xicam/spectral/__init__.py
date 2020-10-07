@@ -3,7 +3,7 @@ from qtpy.QtWidgets import QLabel, QComboBox, QHBoxLayout, QWidget, QSpacerItem,
 from xicam.core import msg
 from xicam.plugins import GUIPlugin, GUILayout
 from xicam.plugins.guiplugin import PanelState
-from xicam.gui.widgets.imageviewmixins import XArrayView, CatalogView#, DepthPlot, BetterTicks, BetterLayout, BetterPlots
+from xicam.gui.widgets.imageviewmixins import XArrayView, CatalogView, StreamSelector, FieldSelector#, DepthPlot, BetterTicks, BetterLayout, BetterPlots,
 import logging
 #from xicam.gui.widgets.library import LibraryWidget
 from xicam.gui.widgets.linearworkfloweditor import WorkflowEditor
@@ -28,13 +28,17 @@ def project_nxSTXM(run_catalog: BlueskyRun):
 def project_nxCXI_ptycho(run_catalog: BlueskyRun):
     projection = next(filter(lambda projection: projection['name'] == 'nxCXI_ptycho', run_catalog.metadata['start']['projections']))
 
-    rec_stream = projection['projection']['data']['stream']
-    rec_field = projection['projection']['data']['field']
+    transmission_rec_stream = projection['projection']['object_transmission']['stream']
+    transmission_rec_field = projection['projection']['object_transmission']['field']
+    phase_rec_stream = projection['projection']['object_phase']['stream']
+    phase_rec_field = projection['projection']['object_phase']['field']
     energy = run_catalog.primary.read()['E [eV]'].data[0]
     coords_x = run_catalog.primary.read()['x [nm]'].data[0]
     coords_y = run_catalog.primary.read()['y [nm]'].data[0]
 
-    rec_data = getattr(run_catalog, rec_stream).to_dask()[rec_field]
+    # rec_data = getattr(run_catalog, transmission_rec_stream).to_dask().rename({transmission_rec_field: 'object_transmission', \
+    #                                                                           phase_rec_field: 'object_phase'})
+    rec_data = getattr(run_catalog, transmission_rec_stream).to_dask()[transmission_rec_field]
     rec_data = np.squeeze(rec_data)
     rec_data = rec_data.assign_coords({rec_data.dims[0]: energy, rec_data.dims[1]: coords_y, rec_data.dims[2]: coords_x})
     return rec_data
@@ -44,6 +48,7 @@ def project_nxCXI_ptycho(run_catalog: BlueskyRun):
 #         # CatalogViewerBlend inherits methods from XArrayView and CatalogView
 #         # super allows us to access both methods when calling super() from Blend
 #         super(CatalogViewerBlend, self).__init__(*args, **kwargs)
+
 
 
 class SpectralPlugin(GUIPlugin):
@@ -69,8 +74,9 @@ class SpectralPlugin(GUIPlugin):
         try:
             self.stream_fields = get_all_image_fields(run_catalog)
             stream_names = get_all_streams(run_catalog)
+            # field_names = self.stream_fields[stream_names[0]]
             msg.showMessage(f"Loading primary image for {run_catalog.name}")
-            # # try and startup with primary catalog and whatever fields it has
+            ## try and startup with primary catalog and whatever fields it has
             # if "primary" in self.stream_fields:
             #     default_stream_name = "primary" if "primary" in stream_names else stream_names[0]
             # else:
@@ -92,7 +98,10 @@ class SpectralPlugin(GUIPlugin):
                 msg.logMessage('No working projector found')
                 print('No working projector found')
 
+            # self.catalog_viewer.setStream(default_stream_name)
+            # self.catalog_viewer.setField(field_names[0])
             self.catalog_viewer.setImage(intent)
+
 
         except Exception as e:
             msg.logError(e)
