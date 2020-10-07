@@ -48,13 +48,14 @@ def ingest_cxi(paths):
 
     h5 = h5py.File(path, 'r')
 
-    #TODO: How to sort dict by energies?
+    #TODO: What initial sorting is needed for a general dataset
     h5_entry_dict = {}
     for key in h5.keys():
         if 'entry' in key:
             h5_entry_dict[key] = key.split('_')[-1].zfill(3)
     sorted_entry_list = sorted(h5_entry_dict.items(), key=lambda item: item[1])
     # TODO check if energies are "continuous" or have interruptions
+    # the removal of last for entries is only temporary due to the example dataset
     del sorted_entry_list[-4:]
 
     frames_stack = []

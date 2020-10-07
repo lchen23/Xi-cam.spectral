@@ -45,7 +45,7 @@ def project_nxCXI_ptycho(run_catalog: BlueskyRun):
 
     try: #if hints are implemented
         from hints import ImageHint
-        return [ImageHint(image = rec_data_trans, category='transmission reconstruction'),
+        return [ImageHint(image=rec_data_trans, category='transmission reconstruction'),
                 ImageHint(image=rec_data_phase, category='phase reconstruction')]
 
     except:
