@@ -1,5 +1,5 @@
+import mimetypes
 import time
-
 import event_model
 import h5py
 from dask import array as da
@@ -7,6 +7,8 @@ from pathlib import Path
 from xarray import DataArray
 from scipy.constants import h, e, speed_of_light
 import numpy as np
+
+mimetypes.add_type('application/x-cxi', '.cxi')
 
 
 ENERGY_FIELD = 'E [eV]'

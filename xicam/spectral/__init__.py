@@ -9,7 +9,7 @@ import logging
 from xicam.gui.widgets.linearworkfloweditor import WorkflowEditor
 from databroker.core import BlueskyRun
 from xicam.core.execution import Workflow
-from xarray import DataArray
+import xarray as xr
 
 
 def project_nxSTXM(run_catalog: BlueskyRun):
@@ -19,9 +19,11 @@ def project_nxSTXM(run_catalog: BlueskyRun):
     sample_y = projection['irmap/DATA/sample_y']
     energy = projection['irmap/DATA/energy']
 
-    xdata = getattr(run_catalog, stream).to_dask()[field]  # type: DataArray
+    xdata = getattr(run_catalog, stream).to_dask()[field]  # type: xr.DataArray
+
     xdata = np.squeeze(xdata)
-    xdata = xdata.assign_coords({xdata.dims[0]: energy, xdata.dims[1]: sample_y, xdata.dims[2]: sample_x})
+
+    xdata = xdata.assign_coords({xdata.dims[0]: energy, xdata.dims[2]: sample_x, xdata.dims[1]: sample_y})
 
     return xdata
 
@@ -52,11 +54,11 @@ def project_nxCXI_ptycho(run_catalog: BlueskyRun):
         rec_data_trans = rec_data_trans.assign_coords({rec_data_trans.dims[0]: energy, rec_data_trans.dims[1]: coords_y, rec_data_trans.dims[2]: coords_x})
         return rec_data_trans
 
-# class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
-#     def __init__(self, *args, **kwargs):
-#         # CatalogViewerBlend inherits methods from XArrayView and CatalogView
-#         # super allows us to access both methods when calling super() from Blend
-#         super(CatalogViewerBlend, self).__init__(*args, **kwargs)
+class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
+    def __init__(self, *args, **kwargs):
+        # CatalogViewerBlend inherits methods from XArrayView and CatalogView
+        # super allows us to access both methods when calling super() from Blend
+        super(CatalogViewerBlend, self).__init__(*args, **kwargs)
 
 
 
@@ -64,53 +66,52 @@ class SpectralPlugin(GUIPlugin):
     name = "Spectral"
 
     def __init__(self):
-        # self.catalog_viewer = CatalogViewerBlend()
-        self.catalog_viewer = CatalogView()
-        #self.library_viewer = LibraryWidget()
+        self.current_catalog = None
+
+        # TODO: use catalogs as output of workflows
+        self.current_data = None
+
+        self.catalog_viewer = CatalogViewerBlend()
+        self.library_viewer = LibraryWidget()
 
         self.treatment_workflow = Workflow()
+        self.treatment_editor = WorkflowEditor(self.treatment_workflow,
+                                               callback_slot=self.append_treatment,
+                                               finished_slot=self.show_treatment,
+                                               kwargs_callable=self.treatment_kwargs,
+                                               execute_iterative=True)
 
         self.stages = {
             "Acquire": GUILayout(QWidget()),
-            #"Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
-            "Map": GUILayout(self.catalog_viewer, right=WorkflowEditor(self.treatment_workflow)),
+            "Library": GUILayout(left=PanelState.Disabled, lefttop=PanelState.Disabled, center=self.library_viewer, right=self.catalog_viewer),
+            "Map": GUILayout(self.catalog_viewer, right=self.treatment_editor),
             "Decomposition": GUILayout(QWidget()),
             "Clustering": GUILayout(QWidget()),
         }
         super(SpectralPlugin, self).__init__()
 
+    def treatment_kwargs(self, workflow):
+
+        # FIXME: Putting this here for now...
+        self.current_data = None
+        return {'data': project_nxSTXM(self.current_catalog)}
+
+    def append_treatment(self, result_set):
+        if self.current_data is None:
+            self.current_data = result_set['data']
+        else:
+            self.current_data = xr.concat([self.current_data, result_set['data']], dim='E (eV)')  # FIXME do this better
+
+    def show_treatment(self):
+        self.catalog_viewer.setImage(self.current_data, reset_crosshair=True, autoRange=True)
+
     def appendCatalog(self, run_catalog, **kwargs):
+        self.current_catalog = run_catalog
         try:
-            self.stream_fields = get_all_image_fields(run_catalog)
-            stream_names = get_all_streams(run_catalog)
-            # field_names = self.stream_fields[stream_names[0]]
-            msg.showMessage(f"Loading primary image for {run_catalog.name}")
-            ## try and startup with primary catalog and whatever fields it has
-            # if "primary" in self.stream_fields:
-            #     default_stream_name = "primary" if "primary" in stream_names else stream_names[0]
-            # else:
-            #     default_stream_name = list(self.stream_fields.keys())[0]
+            # Apply nxSTXM projection
+            xdata = project_nxSTXM(run_catalog)
 
-            # Try different projections until success
-            projectors = [project_nxSTXM, project_nxCXI_ptycho]
-            intent = None
-            for projector in projectors:
-                try:
-                    intent = projector(run_catalog).data
-                except Exception as ex:
-                    msg.logError(ex)
-                    msg.showMessage(str(ex), 'trying next projector')
-                if type(intent) == np.ndarray:
-                    print('Using ', str(projector))
-                    break
-            else:
-                msg.logMessage('No working projector found')
-                print('No working projector found')
-
-            # self.catalog_viewer.setStream(default_stream_name)
-            # self.catalog_viewer.setField(field_names[0])
-            self.catalog_viewer.setImage(intent)
-
+            self.catalog_viewer.setImage(xdata, autoRange=True)
 
         except Exception as e:
             msg.logError(e)
@@ -139,32 +140,4 @@ class SpectralPlugin(GUIPlugin):
         # This will only contain more than one dictionary if using Workflow.execute_all
         output_image = results[0]["output_image"]  # We want the output_image from the last operation
         self.results_viewer.setImage(output_image)  # Update the result view widget
-
-### small helper functions
-def get_stream_data_keys(run_catalog, stream):
-    return run_catalog[stream].metadata["descriptors"][0]["data_keys"]
-
-
-def get_all_streams(run_catalog):
-    return list(run_catalog)
-
-
-def get_all_image_fields(run_catalog):
-    all_streams_image_fields = {}
-    for stream in get_all_streams(run_catalog):
-        stream_fields = get_stream_data_keys(run_catalog, stream)
-        field_names = stream_fields.keys()
-        for field_name in field_names:
-            field_shape = len(stream_fields[field_name]["shape"])
-            if field_shape > 1 and field_shape < 5:
-                # if field contains at least 1 entry that is at least one-dimensional (shape=2)
-                # or 2-dimensional (shape=3) or up to 3-dimensional (shape=4)
-                # then add field e.g. 'fccd_image'
-                if stream in all_streams_image_fields.keys():  # add values to stream dict key
-                    all_streams_image_fields[stream].append(field_name)
-                else:  # if stream does not already exist in dict -> create new entry
-                    all_streams_image_fields[stream] = [field_name]
-            # TODO how to treat non image data fields in streams
-            # else:
-    return all_streams_image_fields
 

@@ -5,6 +5,10 @@ import event_model
 from pathlib import Path
 import dask.array as da
 from xarray import DataArray
+import mimetypes
+
+mimetypes.add_type('application/x-fits', '.fits')
+
 
 # ttype - coords
 # tunits
@@ -54,7 +58,7 @@ def ingest_NXarpes(paths):
     f = fits.open(path)
 
     frame_count = f[1].data.shape[0]
-    data = np.stack(f[1].data[i][-1] for i in range(frame_count))
+    data = np.stack([f[1].data[i][-1] for i in range(frame_count)])
     data = data.reshape((f[0].header["N_0_0"], f[0].header["N_0_1"], data.shape[1], data.shape[2]))
     energy = np.arange(f[0].header["SFSE_0"], f[0].header["SFEE_0"], 1. / f[0].header["SFPEV_0"] * f[0].header["SFBE0"])
     sample_x = np.linspace(f[0].header["ST_0_0"], f[0].header["EN_0_0"], f[0].header["N_0_0"])
