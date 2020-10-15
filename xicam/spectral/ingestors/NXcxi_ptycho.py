@@ -105,8 +105,8 @@ def ingest_cxi(paths):
     coords_y = [pxsize*i for i in range(dim_y)]
 
     ### Create data array
-    xarray_trans = DataArray(np.abs(rec_stack), dims=('E [eV]', 'y [nm]', 'x [nm]'), coords=[energy_eV_stack, coords_y, coords_x])
-    xarray_phase = DataArray(np.angle(rec_stack), dims=('E [eV]', 'y [nm]', 'x [nm]'), coords=[energy_eV_stack, coords_y, coords_x])
+    xarray_trans = DataArray(np.abs(rec_stack), dims=('E (eV)', 'y (nm)', 'x (nm)'), coords=[energy_eV_stack, coords_y, coords_x])
+    xarray_phase = DataArray(np.angle(rec_stack), dims=('E (eV)', 'y (nm)', 'x (nm)'), coords=[energy_eV_stack, coords_y, coords_x])
     # xarray_sortE = xarray.sortby('E [eV]')
     #return energy_eV_stack, rec_stack, pxsize, xarray#, xarray_sortE #,dask_data
 
