@@ -30,7 +30,7 @@ def project_nxSTXM(run_catalog: BlueskyRun):
 
 
 def project_nxCXI_ptycho(run_catalog: BlueskyRun):
-    projection = next(filter(lambda projection: projection['name'] == 'nxCXI_ptycho', run_catalog.metadata['start']['projections']))
+    projection = next(filter(lambda projection: projection['name'] == 'NXcxi_ptycho', run_catalog.metadata['start']['projections']))
 
     transmission_rec_stream = projection['projection']['object_transmission']['stream']
     transmission_rec_field = projection['projection']['object_transmission']['field']
@@ -55,7 +55,7 @@ def project_nxCXI_ptycho(run_catalog: BlueskyRun):
             ]
 
 
-projection_mapping = {'nxCXI_ptycho': project_nxCXI_ptycho,
+projection_mapping = {'NXcxi_ptycho': project_nxCXI_ptycho,
                       'nxSTXM': project_nxSTXM}
 
 

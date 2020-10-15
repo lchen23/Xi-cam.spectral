@@ -19,7 +19,7 @@ COORDS_Y_FIELD = 'y [nm]'
 
 ### describe projections (not needed for CatalogViewer but for technique-specific plugin that will use intents
 # TODO match key names with NX structures
-projections = [{'name': 'nxCXI_ptycho',
+projections = [{'name': 'NXcxi_ptycho',
                 'version': '0.1.0',
                 'projection':
                     {'object_transmission': {'type': 'linked',
@@ -44,6 +44,12 @@ projections = [{'name': 'nxCXI_ptycho',
                                   'field': COORDS_Y_FIELD}
                      }
                 }]
+
+
+def rec_psize_nm(energy, corner_x, corner_y, corner_z):
+    l = (1239.852 / (energy / e)) * 1e-9
+    NA = np.sqrt(corner_x ** 2 + corner_y ** 2) / np.sqrt(2.) / corner_z
+    return np.round(l / 2. / NA * 1e9, 2)
 
 
 def ingest_cxi(paths):
@@ -71,11 +77,6 @@ def ingest_cxi(paths):
     rec_shape = h5['entry_1']['image_1']['data'].shape
     dim_x = rec_shape[0]
     dim_y = rec_shape[1]
-
-    def rec_psize_nm(energy, corner_x, corner_y, corner_z):
-        l = (1239.852 / (energy/e)) * 1e-9
-        NA = np.sqrt(corner_x**2 + corner_y**2) / np.sqrt(2.) / corner_z
-        return np.round(l / 2. / NA * 1e9, 2)
 
     for entry in sorted_entry_list:
         rec = da.from_array(h5[entry[0]]['image_1']['data'])
