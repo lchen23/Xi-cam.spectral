@@ -3,9 +3,10 @@ from qtpy.QtWidgets import QLabel, QComboBox, QHBoxLayout, QWidget, QSpacerItem,
 from xicam.core import msg
 from xicam.plugins import GUIPlugin, GUILayout
 from xicam.plugins.guiplugin import PanelState
-from xicam.gui.widgets.imageviewmixins import XArrayView, CatalogView, StreamSelector, FieldSelector#, DepthPlot, BetterTicks, BetterLayout, BetterPlots,
-import logging
-#from xicam.gui.widgets.library import LibraryWidget
+from xicam.gui.widgets.imageviewmixins import XArrayView, CatalogView, StreamSelector, BetterPlots, \
+    FieldSelector, BetterLayout, DepthPlot  # , DepthPlot, BetterTicks, BetterLayout, BetterPlots,
+from xicam.core.intents import ImageIntent
+from xicam.gui.widgets.library import LibraryWidget
 from xicam.gui.widgets.linearworkfloweditor import WorkflowEditor
 from databroker.core import BlueskyRun
 from xicam.core.execution import Workflow
@@ -27,6 +28,7 @@ def project_nxSTXM(run_catalog: BlueskyRun):
 
     return xdata
 
+
 def project_nxCXI_ptycho(run_catalog: BlueskyRun):
     projection = next(filter(lambda projection: projection['name'] == 'nxCXI_ptycho', run_catalog.metadata['start']['projections']))
 
@@ -45,14 +47,24 @@ def project_nxCXI_ptycho(run_catalog: BlueskyRun):
     rec_data_phase = getattr(run_catalog, phase_rec_stream).to_dask()[phase_rec_field]
     rec_data_phase = np.squeeze(rec_data_phase)
 
-    try: #if hints are implemented
-        from hints import ImageHint
-        return [ImageHint(image=rec_data_trans, category='transmission reconstruction'),
-                ImageHint(image=rec_data_phase, category='phase reconstruction')]
+    rec_data_trans = rec_data_trans.assign_coords(
+        {rec_data_trans.dims[0]: energy, rec_data_trans.dims[1]: coords_y, rec_data_trans.dims[2]: coords_x})
 
-    except:
-        rec_data_trans = rec_data_trans.assign_coords({rec_data_trans.dims[0]: energy, rec_data_trans.dims[1]: coords_y, rec_data_trans.dims[2]: coords_x})
-        return rec_data_trans
+    return [ImageIntent(item_name='Transmission Reconstruction', image=rec_data_trans),
+                # ImageIntent(image=rec_data_phase, item_name='phase reconstruction')
+            ]
+
+
+projection_mapping = {'nxCXI_ptycho': project_nxCXI_ptycho,
+                      'nxSTXM': project_nxSTXM}
+
+
+def project_all(run_catalog: BlueskyRun):
+    for projection in run_catalog.metadata['start']['projections']:
+        projector = projection_mapping.get(projection['name'])
+        if projector:
+            return projector(run_catalog)
+
 
 class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
     def __init__(self, *args, **kwargs):
@@ -61,12 +73,12 @@ class CatalogViewerBlend(BetterPlots, BetterLayout, DepthPlot, XArrayView):
         super(CatalogViewerBlend, self).__init__(*args, **kwargs)
 
 
-
 class SpectralPlugin(GUIPlugin):
     name = "Spectral"
 
     def __init__(self):
         self.current_catalog = None
+        self.current_raw = None
 
         # TODO: use catalogs as output of workflows
         self.current_data = None
@@ -94,7 +106,7 @@ class SpectralPlugin(GUIPlugin):
 
         # FIXME: Putting this here for now...
         self.current_data = None
-        return {'data': project_nxSTXM(self.current_catalog)}
+        return {'data': self.current_raw}
 
     def append_treatment(self, result_set):
         if self.current_data is None:
@@ -107,37 +119,16 @@ class SpectralPlugin(GUIPlugin):
 
     def appendCatalog(self, run_catalog, **kwargs):
         self.current_catalog = run_catalog
-        try:
-            # Apply nxSTXM projection
-            xdata = project_nxSTXM(run_catalog)
 
-            self.catalog_viewer.setImage(xdata, autoRange=True)
+
+        try:
+            # Apply projections
+            intents = project_all(run_catalog)
+
+            self.current_raw = intents[0].image
+
+            self.catalog_viewer.setImage(self.current_raw, autoRange=True)
 
         except Exception as e:
             msg.logError(e)
             msg.showMessage("Unable to display: ", str(e))
-
-    def run_workflow(self):
-        """Run the internal workflow.
-        In this example, this will be called whenever the "Run Workflow" in the WorkflowEditor is clicked.
-        """
-        if not self.catalog_viewer.catalog:  # Don't run if there is no data loaded in
-            return
-        # Use Workflow's execute method to run the workflow.
-        # our callback_slot will be called when the workflow has executed its operations
-        # image is an additional keyword-argument that is fed into the first operation in the workflow
-        # (the invert operation needs an "image" argument)
-        self._workflow.execute(callback_slot=self.results_ready,
-                               image=self.catalog_viewer.image)
-
-    def results_ready(self, *results):
-        """Update the results view widget with the processed data.
-        This is called when the workflow's execute method has finished running is operations.
-        """
-        # print(results)
-        # results is a tuple that will look like:
-        # ({"output_name": output_value"}, ...)
-        # This will only contain more than one dictionary if using Workflow.execute_all
-        output_image = results[0]["output_image"]  # We want the output_image from the last operation
-        self.results_viewer.setImage(output_image)  # Update the result view widget
-

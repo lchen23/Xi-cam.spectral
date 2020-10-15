@@ -8,6 +8,8 @@ from xarray import DataArray
 from scipy.constants import h, e, speed_of_light
 import numpy as np
 
+from xicam.core import msg
+
 mimetypes.add_type('application/x-cxi', '.cxi')
 
 
@@ -94,7 +96,7 @@ def ingest_cxi(paths):
     try:
         pxsize = h5['entry_1/image_1/pixel_size'][()]
     except KeyError:
-        print('Image pixel size not found in file >> calculating from corner position and energy')
+        msg.logMessage('Image pixel size not found in file >> calculating from corner position and energy', msg.WARNING)
         corner_x, corner_y, corner_z = h5[entry[0]]['instrument_1/detector_1/corner_position'][()]
         pxsize = rec_psize_nm(energy, corner_x, corner_y, corner_z)
 
