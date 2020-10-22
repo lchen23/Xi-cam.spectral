@@ -17,7 +17,7 @@ from databroker.core import BlueskyRun
 from xicam.core.execution import Workflow
 from xicam.plugins import GUIPlugin
 from ..widgets.image_viewers import CatalogViewerBlend
-from ..projectors import project_nxSTXM
+from ..projectors import project_nxSTXM, project_all
 
 
 class SpectralBase(GUIPlugin):
@@ -44,7 +44,7 @@ class SpectralBase(GUIPlugin):
 
         # FIXME: Putting this here for now...
         self.current_data = None
-        return {'data': project_nxSTXM(self.current_catalog)}
+        return {'data': project_all(self.current_catalog)}
 
     def append_treatment(self, result_set):
         if self.current_data is None:
