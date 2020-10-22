@@ -5,8 +5,8 @@ import event_model
 from pathlib import Path
 import dask.array as da
 from xarray import DataArray
-
 import mimetypes
+
 mimetypes.add_type('application/x-fits', '.fits')
 
 
