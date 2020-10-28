@@ -46,8 +46,23 @@ def project_nxCXI_ptycho(run_catalog: BlueskyRun):
             ]
 
 
+def project_arpes(catalog):
+    # TODO: single-source
+    ENERGY_FIELD = 'E (eV)'
+    SAMPLE_X_FIELD = 'x (μm)'
+    SAMPLE_Y_FIELD = 'y (μm)'
+    ANGLE_FIELD = '???'
+
+    data = catalog.primary.to_dask()
+    raw_data = data['raw'][0]
+    raw_data = raw_data.assign_coords({name: np.asarray(data[name][0])
+                                       for name in raw_data.dims})
+    return raw_data
+
+
 projection_mapping = {'NXcxi_ptycho': project_nxCXI_ptycho,
-                      'nxSTXM': project_nxSTXM}
+                      'nxSTXM': project_nxSTXM,
+                      'arpes': project_arpes}
 
 
 def project_all(run_catalog: BlueskyRun):
