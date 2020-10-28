@@ -59,13 +59,13 @@ class SpectralBase(GUIPlugin):
         # catalog.metadata.update(self.schema())
         ensemble = Ensemble()
         ensemble.append_catalog(run_catalog)
-        self.ensemble_model.add_ensemble(ensemble, project_nxSTXM)
+        self.ensemble_model.add_ensemble(ensemble, project_all)
 
         try:
             # Apply nxSTXM projection
-            xdata = project_nxSTXM(run_catalog)
+            xdata = project_all(run_catalog)
 
-            self.catalog_viewer.setData(xdata, view_dims=('y (μm)', 'x (μm)'))
+            self.catalog_viewer.setData(xdata)#, view_dims=('y (μm)', 'x (μm)')
 
         except Exception as e:
             msg.logError(e)
