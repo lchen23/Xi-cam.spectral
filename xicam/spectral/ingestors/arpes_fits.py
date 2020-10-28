@@ -19,8 +19,8 @@ mimetypes.add_type('application/x-fits', '.fits')
 # 1-d array of frames
 
 ENERGY_FIELD = 'E (eV)'
-SAMPLE_X_FIELD = 'Sample X (um)'
-SAMPLE_Y_FIELD = 'Sample Y (um)'
+SAMPLE_X_FIELD = 'x (μm)'
+SAMPLE_Y_FIELD = 'y (μm)'
 ANGLE_FIELD = '???'
 
 projections = [{'name': 'arpes',
@@ -68,7 +68,7 @@ def ingest_NXarpes(paths):
     dim0 = f"{f[0].header['NM_0_0']} ({f[0].header['UN_0_0']})"
     dim1 = f"{f[0].header['NM_0_1']} ({f[0].header['UN_0_1']})"
 
-    xarray = DataArray(data, dims=[dim1, dim0, '???', 'E (eV)'],
+    xarray = DataArray(data, dims=[dim1, dim0, ANGLE_FIELD, ENERGY_FIELD],
                        coords=[sample_y, sample_x, unknown_axis_coords, energy])
     # dask_data = da.from_array(xarray)
 
@@ -89,10 +89,10 @@ def ingest_NXarpes(paths):
                        ENERGY_FIELD: {'source': source,
                                       'dtype': 'number',
                                       'shape': energy.shape},
-                       SAMPLE_X_FIELD: {'source': source,
+                       dim0: {'source': source,
                                         'dtype': 'number',
                                         'shape': sample_x.shape},
-                       SAMPLE_Y_FIELD: {'source': source,
+                       dim1: {'source': source,
                                         'dtype': 'number',
                                         'shape': sample_y.shape},
                        ANGLE_FIELD: {'source': source,
@@ -119,13 +119,13 @@ def ingest_NXarpes(paths):
 
     yield 'event', frame_stream_bundle.compose_event(data={'raw': xarray,
                                                            ENERGY_FIELD: energy,
-                                                           SAMPLE_X_FIELD: sample_x,
-                                                           SAMPLE_Y_FIELD: sample_y,
+                                                           dim0: sample_x,
+                                                           dim1: sample_y,
                                                            ANGLE_FIELD: unknown_axis_coords},
                                                      timestamps={'raw': time.time(),
                                                                  ENERGY_FIELD:time.time(),
-                                                                 SAMPLE_X_FIELD:time.time(),
-                                                                 SAMPLE_Y_FIELD:time.time(),
+                                                                 dim0:time.time(),
+                                                                 dim1:time.time(),
                                                                  ANGLE_FIELD:time.time()})
 
     yield 'stop', run_bundle.compose_stop()
