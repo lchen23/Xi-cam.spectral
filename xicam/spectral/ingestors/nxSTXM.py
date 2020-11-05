@@ -22,12 +22,20 @@ def ingest_nxSTXM(paths):
     xarray = DataArray(data, dims=['E (eV)', 'y (μm)', 'x (μm)'], coords=[energy, sample_y, sample_x])
     dask_data = da.from_array(xarray)
 
-    projections = [('nxSTXM',
-                        {'irmap/DATA/data': ('primary', 'raw'),
-                         'irmap/DATA/energy': energy,
-                         'irmap/DATA/sample_x': sample_x,
-                         'irmap/DATA/sample_y': sample_y}
-    )]
+    projections = [{'name': 'nxSTXM',
+                    'version': '0.1.0',
+                    'projection':
+                        {'irmap/DATA/data': {'type': 'linked',
+                                             'stream': 'primary',
+                                             'location': 'event',
+                                             'field': 'raw'},
+                         'irmap/DATA/energy': {'type': 'static',
+                                               'value': energy},
+                         'irmap/DATA/sample_x': {'type': 'static',
+                                                 'value': sample_x},
+                         'irmap/DATA/sample_y': {'type': 'static',
+                                                 'value': sample_y}
+                         }}]
 
     # Compose run start
     run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle

@@ -5,11 +5,12 @@ from xicam.core.intents import ImageIntent
 
 
 def project_nxSTXM(run_catalog: BlueskyRun):
-    _, projection = next(filter(lambda projection: projection[0] == 'nxSTXM', run_catalog.metadata['start']['projections']))
-    stream, field = projection['irmap/DATA/data']
-    sample_x = projection['irmap/DATA/sample_x']
-    sample_y = projection['irmap/DATA/sample_y']
-    energy = projection['irmap/DATA/energy']
+    projection = next(filter(lambda projection: projection['name'] == 'nxSTXM', run_catalog.metadata['start']['projections']))['projection']
+    stream = projection['irmap/DATA/data']['stream']
+    field = projection['irmap/DATA/data']['field']
+    sample_x = projection['irmap/DATA/sample_x']['value']
+    sample_y = projection['irmap/DATA/sample_y']['value']
+    energy = projection['irmap/DATA/energy']['value']
 
     xdata = getattr(run_catalog, stream).to_dask()[field]  # type: xr.DataArray
 
@@ -17,7 +18,7 @@ def project_nxSTXM(run_catalog: BlueskyRun):
 
     xdata = xdata.assign_coords({xdata.dims[0]: energy, xdata.dims[2]: sample_x, xdata.dims[1]: sample_y})
 
-    return xdata
+    return xdata.transpose('y (μm)', 'x (μm)', ...)
 
 
 def project_nxCXI_ptycho(run_catalog: BlueskyRun):
