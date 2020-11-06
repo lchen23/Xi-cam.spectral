@@ -41,6 +41,7 @@ setup(
         "xicam.plugins.OperationPlugin": ['pca = xicam.spectral.operations.decomposition:pca',
                                           'nmf = xicam.spectral.operations.decomposition:nmf',
                                           'umap = xicam.spectral.operations.decomposition:umap',
+                                          'kmeans = xicam.spectral.operations.clustering:kmeans',
                                           'standard_scaler = xicam.spectral.operations.normalization:standard_scaler',
                                           'normalizer = xicam.spectral.operations.normalization:normalizer'],
         "databroker.ingestors": ["application/x-hdf5 = xicam.spectral.ingestors.nxSTXM:ingest_nxSTXM",
